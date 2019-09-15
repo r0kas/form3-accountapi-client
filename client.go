@@ -169,9 +169,9 @@ func (c *HTTPClient) Delete(ctx context.Context, accountID string, version int) 
 	return c.doRequest(request, http.StatusNoContent, nil)
 }
 
-// Health queries API for it's status
+// IsHealthy queries API for it's status
 // Returns a boolean based on API health status
-func (c *HTTPClient) Health(ctx context.Context) bool {
+func (c *HTTPClient) IsHealthy(ctx context.Context) bool {
 	if err := c.validateClient(); err != nil {
 		return false
 	}

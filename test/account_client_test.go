@@ -250,7 +250,7 @@ func aPIReturnsAnErrorOnCreateCommand() error {
 }
 
 func apiClientIsHealthy() error {
-	if apiClient.Health(nil) {
+	if apiClient.IsHealthy(nil) {
 		return nil
 	}
 	return errors.New("API is not healthy")
