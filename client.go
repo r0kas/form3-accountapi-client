@@ -48,6 +48,11 @@ func NewHTTPClient(httpClient *http.Client, apiHost, apiEndpoint string) (*HTTPC
 	if err != nil {
 		return nil, err
 	}
+	if httpClient == nil {
+		httpClient = &http.Client{
+			Timeout: 30,
+		}
+	}
 	return &HTTPClient{
 		httpClient:  httpClient,
 		apiHost:     host,
@@ -69,7 +74,7 @@ func (c *HTTPClient) Create(ctx context.Context, account *Account) (*Account, er
 		return nil, errors.New("cannot create account without initialized account object. Use account builder")
 	}
 
-	request, err := c.newRequest(ctx, http.MethodPost, c.requestURL("", nil), c.createTransportData(account))
+	request, err := c.newRequest(ctx, http.MethodPost, c.clientAPIRequestURL("", nil), c.createTransportData(account))
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +102,7 @@ func (c *HTTPClient) Fetch(ctx context.Context, accountID string) (*Account, err
 		return nil, errors.Wrap(err, "provided account ID must be a valid UUID")
 	}
 
-	request, err := c.newRequest(ctx, http.MethodGet, c.requestURL(accountID, nil), nil)
+	request, err := c.newRequest(ctx, http.MethodGet, c.clientAPIRequestURL(accountID, nil), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +130,7 @@ func (c *HTTPClient) List(ctx context.Context, paging *PaginationSettings) ([]Ac
 		paging = &PaginationSettings{}
 	}
 
-	request, err := c.newRequest(ctx, http.MethodGet, c.requestURL("", c.pagingParameters(paging)), nil)
+	request, err := c.newRequest(ctx, http.MethodGet, c.clientAPIRequestURL("", c.pagingParameters(paging)), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -156,12 +161,30 @@ func (c *HTTPClient) Delete(ctx context.Context, accountID string, version int) 
 		return errors.Wrap(err, "provided account ID must be a valid UUID")
 	}
 
-	request, err := c.newRequest(ctx, http.MethodDelete, c.requestURL(accountID, c.versionParameters(version)), nil)
+	request, err := c.newRequest(ctx, http.MethodDelete, c.clientAPIRequestURL(accountID, c.versionParameters(version)), nil)
 	if err != nil {
 		return err
 	}
 
 	return c.doRequest(request, http.StatusNoContent, nil)
+}
+
+// Health queries API for it's status
+// Returns a boolean based on API health status
+func (c *HTTPClient) Health(ctx context.Context) bool {
+	if err := c.validateClient(); err != nil {
+		return false
+	}
+	request, err := c.newRequest(ctx, http.MethodGet, c.healthEndpoint(), nil)
+	if err != nil {
+		return false
+	}
+
+	err = c.doRequest(request, http.StatusOK, nil)
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 // checks if API client was properly initialized, so that API commands would fail fast if something is missing.
@@ -203,13 +226,18 @@ func (c *HTTPClient) bodyBuffer(body interface{}) (*bytes.Buffer, error) {
 	return buf, nil
 }
 
-func (c *HTTPClient) requestURL(addToPath string, parameters map[string]string) *url.URL {
+func (c *HTTPClient) clientAPIRequestURL(addToPath string, parameters map[string]string) *url.URL {
 	endpoint := *c.apiEndpoint
 	if addToPath != "" {
 		endpoint.Path = path.Join(endpoint.Path, addToPath)
 	}
 	c.addParameters(&endpoint, parameters)
 	return c.apiHost.ResolveReference(&endpoint)
+}
+
+func (c *HTTPClient) healthEndpoint() *url.URL {
+	healthEndpoint, _ := url.Parse("/v1/health")
+	return c.apiHost.ResolveReference(healthEndpoint)
 }
 
 func (c *HTTPClient) addParameters(url *url.URL, parameters map[string]string) {

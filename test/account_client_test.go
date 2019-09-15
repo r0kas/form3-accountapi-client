@@ -148,7 +148,7 @@ func accountBicIs(bic string) error {
 }
 
 func apiClientIsCreatedWithApiHostAndApiEndpoint(hostname, endpoint string) (err error) {
-	apiClient, err = account.NewHTTPClient(http.DefaultClient, hostname, endpoint)
+	apiClient, err = account.NewHTTPClient(nil, hostname, endpoint)
 	return
 }
 
@@ -241,6 +241,21 @@ func iListPageWithPageSize(pageNumber string, pageSize int) (err error) {
 	return
 }
 
+func aPIReturnsAnErrorOnCreateCommand() error {
+	_, err := apiClient.Create(nil, theAccount)
+	if err == nil {
+		return errors.New("expected and error. Got nil")
+	}
+	return nil
+}
+
+func apiClientIsHealthy() error {
+	if apiClient.Health(nil) {
+		return nil
+	}
+	return errors.New("API is not healthy")
+}
+
 func FeatureContext(s *godog.Suite) {
 	s.Step(`^my country code is "([^"]*)"\$$`, myCountryCodeIs)
 	s.Step(`^I create an account builder$`, iCreateAnAccountBuilder)
@@ -277,4 +292,6 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I Create (\d+) random accounts$`, iCreateRandomAccounts)
 	s.Step(`^I have (\d+) account\/s in my list$`, iHaveAccountsInMyList)
 	s.Step(`^I List "([^"]*)" page with Page Size (\d+)$`, iListPageWithPageSize)
+	s.Step(`^API returns an error on Create command$`, aPIReturnsAnErrorOnCreateCommand)
+	s.Step(`^api client is healthy$`, apiClientIsHealthy)
 }
