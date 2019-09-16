@@ -2,7 +2,7 @@ Feature: form3 api client
   API Client must send valid requests and handle responses
 
   Background:
-    Given api host is "http://localhost:8080"
+    Given api host is "http://accountapi:8080"
     And api endpoint is "/v1/organisation/accounts"
     Then api client is created
     And api client is healthy

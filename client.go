@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"path"
 	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -50,7 +51,7 @@ func NewHTTPClient(httpClient *http.Client, apiHost, apiEndpoint string) (*HTTPC
 	}
 	if httpClient == nil {
 		httpClient = &http.Client{
-			Timeout: 30,
+			Timeout: 30 * time.Second,
 		}
 	}
 	return &HTTPClient{
