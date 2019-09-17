@@ -21,7 +21,7 @@ Returns pointer to `account.HTTPClient` and `error` if provided URLs fail to par
 ### Create account resource builder
 Builder is created based on what country accounts it will create.
 Supported countries are listed under `Country` enum. 
-One of available entries of the enum must be provided as parameter in Builder constructor: `NewBuilder(country Country)`
+One of available entries of the enum must be provided as parameter in Builder constructor: `NewBuilder(Country)`
 
 Returns pointer to `account.Builder` with pre-set Country code and BankID code.
 
@@ -88,3 +88,11 @@ Method contact - `Delete(ctx context.Context, accountID string, version int) err
 * version - version number of record
 
 Returns error if request was unsuccessful.
+
+### Modify fetched account
+Account object provides just getter methods. 
+If there is a need to modify fetched account - use account builder constructor `CastBuilderFrom(*Account)`
+
+Account builder with values from provided account will be returned.
+That can be used to set desired attributes and validate them in order to receive a transformed account object.
+ 
